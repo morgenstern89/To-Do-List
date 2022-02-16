@@ -1,102 +1,116 @@
-let taskInput = document.getElementById("task-input");
-let addButton= document.getElementById("add-button");
-let tabs=document.querySelectorAll(".task-tabs div"); 
+let userInput = document.querySelector(".task-input");
+let addButton= document.querySelector(".add-button");
+let tabs=document.querySelectorAll(".tab-type div"); 
+let underLine=document.getElementById("tab-underline");
 let taskList = [];
-let mode="all";
-addButton.addEventListener("click", addTask);
-for(let i=1;i<tabs.length;i++){
-tabs[i].addEventListener("click",function(event){filter(event)})
-};
-function filter(event){
-    mode=event.target.id
-    filterList=[];
-    document.getElementById("under-line").style.width=event.target.offsetWidth + "px";
-    document.getElementById("under-line").style.top=event.target.offsetTop+event.target.offsetHeight+"px";
-    document.getElementById("under-line").style.left=event.target.offsetLeft+"px";
-    if(mode == "all"){
-        render();
-    } else if(mode == "ongoing"){
-        for(let i=0;i<taskList.length;i++){
-            if(taskList[i].isComplete==false){
-                filterList.push(taskList[i]);
-            }
-        }
-        render();
-    }else if(mode =="done"){
-        for(let i=0;i<taskList.length;i++){
-            if(taskList[i].isComplete==true){
-                filterList.push(taskList[i]);
-            }
-        }
-        render();
-    }
+let selectedMenu="tab-all";
+let filteredList=[];
+
+addButton.addEventListener("mousedown", addTask);
+userInput.addEventListener("keyup", function(event){
+    if (event.keyCode === 13){
+        addTask(event);
+     }
+    });
+    for(let i=0;i<tabs.length;i++){
+        tabs[i].addEventListener("click", function(event){
+             filter(event);
+            });
 }
-console.log(tabs);
+
+
 function addTask(){
+    let taskValue=userInput.value;
     let task = {
-        id:randomIDGenerate(),
-        taskContent: taskInput.value,
-        isComplete:false,
+        content:taskValue,
+        isComplete: false,
+        id: randomIDGenerator(),
     };
+
     taskList.push(task);
-    console.log(taskList);
+    userInput.value="";
     render();
-}
+    }
 
 function render(){
-    let list=[];
-    if(mode=="all"){
+    let result="";
+    list=[];
+    if(selectedMenu==="tab-all"){
         list= taskList;
-    }else if(mode=="ongoing" || mode == "done"){
-        list=filterList;
+    }else {
+        list=filteredList;
     }
-    let resultHTML = "";
+    
     for(let i = 0; i<list.length;i++) {
-        if(list[i].isComplete == true){
-            resultHTML+=`<div class="task">
-            <div class="task-done">${list[i].taskContent}</div>
-            <div>
-            <button onclick="toggleComplete('${list[i].id}')">Check</button>
-            <button onclick="deleteTask('${list[i].id}')">Delete</button>
+        if(list[i].isComplete){
+            result += `<div class="task task-done" id="${list[i].id}">
+          <span>${list[i].content}</span>
+            <div class="button-box">
+            <button onclick="toggleDone('${list[i].id}')"><i class="fas fa-undo-alt"></i></button>
+            <button onclick="deleteTask('${list[i].id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+        } else {
+            result += `<div class = "task" id="${list[i].id}">
+            <span>${list[i].content}</span>
+            <div class= "button-box">
+            <button onclick="toggleDone('${list[i].id}')"><i class="fas fa-check"></i></button>
+            <button onclick="deleteTask('${list[i].id}')"><i class="fas fa-trash"></i></button>
             </div>
           </div>`;
-        } else{
-        resultHTML +=`<div class="task">
-        <div>${list[i].taskContent}</div>
-        <div>
-        <button onclick="toggleComplete('${list[i].id}')">Check</button>
-        <button onclick="deleteTask('${list[i].id}')">Delete</button>
-        </div>
-      </div>`;
+        }
+     }
+     
+     document.getElementById("task-board").innerHTML = result;
     }
-}
-    document.getElementById("task-board").innerHTML = resultHTML;
-}
 
 
-function toggleComplete(id){
-    console.log("id:", id);
+function toggleDone(id){
     for(let i=0;i<taskList.length;i++){
-        if(taskList[i].id == id){
+        if(taskList[i].id === id){
             taskList[i].isComplete = !taskList[i].isComplete;
             break;
         }
     }
-    render();
-    console.log(taskList);
+    filter();
 }
 
-function deleteTask(id){
+function deleteTask(id) {
     for(let i=0;i<taskList.length;i++){
-        if(taskList[i].id==id){
-            taskList.splice(i,1)
-            break;
+        if(taskList[i].id===id){
+            taskList.splice(i,1);
+        }
+    }
+    filter();
+}
+
+function filter(e){
+    if(e){
+        selectedMenu = e.target.id;
+        underLine.style.width=e.target.offsetWidth+"px";
+        underLine.style.left=e.target.offsetLeft+"px";
+        underLine.style.top=e.target.offsetTop+(e.target.offsetHeight - 4)+"px";
+    }
+    
+    filteredList=[];
+    if (selectedMenu==="tab-ongoing"){
+    for(let i=0; i<taskList.length;i++){
+        if(taskList[i].isComplete==false){
+            filteredList.push(taskList[i]);
+        }
+    }
+
+    } else if(selectedMenu==="tab-done"){
+        for(let i=0; i<taskList.length;i++){
+            if(taskList[i].isComplete){
+                filteredList.push(taskList[i]);
+            }
         }
     }
     render();
 }
 
-function randomIDGenerate(){
-        return '_' + Math.random().toString(36).substring(2, 9);
+function randomIDGenerator(){
+        return "_" + Math.random().toString(36).substring(2, 9);
 }
 
